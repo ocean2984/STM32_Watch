@@ -1,0 +1,49 @@
+# --- Keil MDK 编译生成的文件 ---
+*.obj
+*.lst
+*.m51
+*.pbi
+*.lnp
+*.htm
+*.build_log.htm
+*.dep
+*.axf
+*.sct
+*.map
+*.hex
+*.bin
+*.d
+*.crf
+*.o
+*.out
+*.elf
+*.iex
+*.tra
+*.i
+*.txt
+*.uvgui.*
+*.uvguix.*
+*.scr
+*.dbgconf
+*.orig
+*.bak
+
+# --- Keil 运行时的临时文件夹 ---
+Listings/
+Objects/
+DebugConfig/
+RTE/
+_Template/
+
+# --- STM32CubeMX 相关 ---
+.mxproject
+# 如果你希望别人也能看到你的编译配置，可以保留 .ioc 文件
+# *.ioc 
+
+# --- 操作系统临时文件 ---
+.DS_Store
+Thumbs.db
+
+# --- 其他临时文件 ---
+*.tmp
+*.log
