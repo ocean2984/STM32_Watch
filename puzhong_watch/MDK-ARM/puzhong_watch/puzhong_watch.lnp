@@ -1,0 +1,26 @@
+--cpu Cortex-M3
+"puzhong_watch\startup_stm32f103xb.o"
+"puzhong_watch\main.o"
+"puzhong_watch\gpio.o"
+"puzhong_watch\i2c.o"
+"puzhong_watch\stm32f1xx_it.o"
+"puzhong_watch\stm32f1xx_hal_msp.o"
+"puzhong_watch\stm32f1xx_hal_gpio_ex.o"
+"puzhong_watch\stm32f1xx_hal_i2c.o"
+"puzhong_watch\stm32f1xx_hal.o"
+"puzhong_watch\stm32f1xx_hal_rcc.o"
+"puzhong_watch\stm32f1xx_hal_rcc_ex.o"
+"puzhong_watch\stm32f1xx_hal_gpio.o"
+"puzhong_watch\stm32f1xx_hal_dma.o"
+"puzhong_watch\stm32f1xx_hal_cortex.o"
+"puzhong_watch\stm32f1xx_hal_pwr.o"
+"puzhong_watch\stm32f1xx_hal_flash.o"
+"puzhong_watch\stm32f1xx_hal_flash_ex.o"
+"puzhong_watch\stm32f1xx_hal_exti.o"
+"puzhong_watch\stm32f1xx_hal_tim.o"
+"puzhong_watch\stm32f1xx_hal_tim_ex.o"
+"puzhong_watch\system_stm32f1xx.o"
+--strict --scatter "puzhong_watch\puzhong_watch.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "puzhong_watch.map" -o puzhong_watch\puzhong_watch.axf
