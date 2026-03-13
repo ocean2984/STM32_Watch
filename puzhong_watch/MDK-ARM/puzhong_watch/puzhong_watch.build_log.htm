@@ -27,12 +27,14 @@ Project File Date:  03/13/2026
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'E:\keil5\ARM\ARMCC\Bin'
 Build target 'puzhong_watch'
-compiling main.c...
-compiling oled.c...
+compiling ds18b20.c...
+..\Core\Src\ds18b20.c(29): warning:  #177-D: function "DS18B20_Reset"  was declared but never referenced
+  static void DS18B20_Reset(void)
+..\Core\Src\ds18b20.c: 1 warning, 0 errors
 linking...
-Program Size: Code=4816 RO-data=372 RW-data=16 ZI-data=1720  
+Program Size: Code=5884 RO-data=880 RW-data=24 ZI-data=1720  
 FromELF: creating hex file...
-"puzhong_watch\puzhong_watch.axf" - 0 Error(s), 0 Warning(s).
+"puzhong_watch\puzhong_watch.axf" - 0 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -55,7 +57,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.1.2
-Build Time Elapsed:  00:00:02
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>

@@ -96,19 +96,17 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 	OLED_Init();
+	DS18B20_Init();
 	
 	OLED_Clear();
-    OLED_ShowString(0,0,"HELLO");
-    //OLED_ShowNum(48,0,(int)temp,2);
-
-    HAL_Delay(1000);
+    
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		/*
+		
 		 key_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
 
     if(key_state == GPIO_PIN_RESET)
@@ -121,14 +119,13 @@ int main(void)
 
             HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,
                 led_flag?GPIO_PIN_RESET:GPIO_PIN_SET);
-
-            while(HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_15)==GPIO_PIN_RESET);
         }
     }
 
-    temp = 25;
-*/
-    
+    temp = DS18B20_GetTemp();
+		OLED_ShowString(0,0,"Temp:");
+    OLED_ShowNum(48,0,(int)temp,2);
+    HAL_Delay(1000);
 		
     /* USER CODE END WHILE */
 

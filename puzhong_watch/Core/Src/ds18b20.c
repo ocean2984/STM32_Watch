@@ -38,19 +38,90 @@ static void DS18B20_Reset(void)
 }
 
 /* 初始化 */
-
-void DS18B20_Init(void)
+// 微秒延时（HAL库没有，我给你最简可用版）
+void HAL_Delay_us(uint32_t us)
 {
-    DS18B20_Reset();
+    uint32_t delay = us * (SystemCoreClock / 1000000 / 4);
+    while(delay--);
+}
+// ===================== 初始化 =====================
+uint8_t DS18B20_Init(void)
+{
+    uint8_t ack = 0;
+
+    DS18B20_OUT();
+    HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_RESET);
+    HAL_Delay_us(480);   // 拉低480us
+
+    DS18B20_IN();
+    HAL_Delay_us(60);    // 等待应答
+
+    // 读到低电平 = DS18B20存在
+    if(HAL_GPIO_ReadPin(DS18B20_PORT, DS18B20_PIN) == 0) ack = 1;
+
+    HAL_Delay_us(420);
+    return ack;
 }
 
-/* 读取温度（测试版） */
+// ===================== 写字节 =====================
+void DS18B20_WriteByte(uint8_t dat)
+{
+    uint8_t i;
+    DS18B20_OUT();
 
+    for(i=0; i<8; i++)
+    {
+        HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_RESET);
+        HAL_Delay_us(2);
+
+        if(dat & 0x01)
+            HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_SET);
+        else
+            HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_RESET);
+
+        HAL_Delay_us(60);
+        HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_SET);
+        dat >>= 1;
+    }
+}
+
+// ===================== 读字节 =====================
+uint8_t DS18B20_ReadByte(void)
+{
+    uint8_t i, dat = 0;
+    for(i=0; i<8; i++)
+    {
+        DS18B20_OUT();
+        HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_RESET);
+        HAL_Delay_us(2);
+
+        DS18B20_IN();
+        dat >>= 1;
+        if(HAL_GPIO_ReadPin(DS18B20_PORT, DS18B20_PIN))
+            dat |= 0x80;
+
+        HAL_Delay_us(60);
+    }
+    return dat;
+}
+
+// ===================== 读温度 =====================
 float DS18B20_GetTemp(void)
 {
-    DS18B20_Reset();
+    uint8_t L, M;
+    int16_t temp;
 
-    /* 先返回测试温度 */
+    DS18B20_Init();
+    DS18B20_WriteByte(0xCC);
+    DS18B20_WriteByte(0x44);  // 开始转换
 
-    return 25.0;
+    DS18B20_Init();
+    DS18B20_WriteByte(0xCC);
+    DS18B20_WriteByte(0xBE);  // 读数据
+
+    L = DS18B20_ReadByte();
+    M = DS18B20_ReadByte();
+
+    temp = (M << 8) | L;
+    return temp * 0.0625f;
 }
