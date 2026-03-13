@@ -1,5 +1,7 @@
 --cpu Cortex-M3
 "puzhong_watch\startup_stm32f103xb.o"
+"puzhong_watch\ds18b20.o"
+"puzhong_watch\oled.o"
 "puzhong_watch\main.o"
 "puzhong_watch\gpio.o"
 "puzhong_watch\i2c.o"

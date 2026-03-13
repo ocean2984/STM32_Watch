@@ -23,7 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ds18b20.h"
+#include "oled.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,7 +44,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+float temp;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,28 +95,40 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-
+	OLED_Init();
 	
+	OLED_Clear();
+    OLED_ShowString(0,0,"HELLO");
+    //OLED_ShowNum(48,0,(int)temp,2);
+
+    HAL_Delay(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		key_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
-     
-     if (key_state == GPIO_PIN_RESET) {  // 检测到按键按下
-       delay_ms(10);  // 软件消抖（关键，避免抖动误触发）
-       if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET) {
-         // 翻转D1状态（PA0）
-         led_flag = !led_flag;
-         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, led_flag ? GPIO_PIN_RESET : GPIO_PIN_SET);
-         
-         // 等待按键松开（避免长按多次触发）
-         while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET);
-       }
-     }
-   
+		/*
+		 key_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
+
+    if(key_state == GPIO_PIN_RESET)
+    {
+        HAL_Delay(10);
+
+        if(HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_15)==GPIO_PIN_RESET)
+        {
+            led_flag = !led_flag;
+
+            HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,
+                led_flag?GPIO_PIN_RESET:GPIO_PIN_SET);
+
+            while(HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_15)==GPIO_PIN_RESET);
+        }
+    }
+
+    temp = 25;
+*/
+    
 		
     /* USER CODE END WHILE */
 

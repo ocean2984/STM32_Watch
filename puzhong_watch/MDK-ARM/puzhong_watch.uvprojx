@@ -393,6 +393,31 @@
           <GroupName>Application/User/Core</GroupName>
           <Files>
             <File>
+              <FileName>ds18b20.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\ds18b20.c</FilePath>
+            </File>
+            <File>
+              <FileName>oled.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\oled.c</FilePath>
+            </File>
+            <File>
+              <FileName>ds18b20.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Inc\ds18b20.h</FilePath>
+            </File>
+            <File>
+              <FileName>oled.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Inc\oled.h</FilePath>
+            </File>
+            <File>
+              <FileName>oledfont.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Inc\oledfont.h</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/main.c</FilePath>
