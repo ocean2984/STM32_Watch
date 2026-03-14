@@ -27,6 +27,8 @@
 #include "ds18b20.h"
 #include "oled.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include "mpu6050.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +55,12 @@ RTC_DateTypeDef getDate;
 
 char timebuf[20];
 char datebuf[20];
+
+int16_t ax,ay,az;
+int step = 0;
+int flag = 0;
+uint32_t last_step_time = 0;
+int last_acc = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -109,6 +117,7 @@ int main(void)
 	
 	OLED_Clear();
 	
+	MPU6050_Init();
 	//====设置时间====
     RTC_TimeTypeDef sTime;
 		RTC_DateTypeDef sDate;
@@ -124,6 +133,8 @@ int main(void)
 		sDate.Date = 15;
 
 		HAL_RTC_SetDate(&hrtc,&sDate,RTC_FORMAT_BIN);
+		//====MPU6050====
+		
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -178,7 +189,34 @@ int main(void)
     OLED_ShowNum(66,2,b,1);
 
     HAL_Delay(1000);
-		
+		//=====MPU6050=====
+		MPU6050_ReadAccel(&ax,&ay,&az);
+MPU6050_ReadAccel(&ax,&ay,&az);
+
+int az_show = az;
+if(az_show < 0) az_show = -az_show;
+
+//检测波峰
+if(az_show > 16500 && flag == 0)
+{
+    //时间过滤（防止抖动）
+    if(HAL_GetTick() - last_step_time > 200)
+    {
+        step++;
+        last_step_time = HAL_GetTick();
+    }
+
+    flag = 1;
+}
+
+//波谷复位
+if(az_show < 14000)
+{
+    flag = 0;
+}
+OLED_ShowString(0,3,"Step:");
+OLED_ShowNum(48,3,step,5);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

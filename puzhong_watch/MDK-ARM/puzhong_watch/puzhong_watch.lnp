@@ -8,6 +8,7 @@
 "puzhong_watch\rtc.o"
 "puzhong_watch\stm32f1xx_it.o"
 "puzhong_watch\stm32f1xx_hal_msp.o"
+"puzhong_watch\mpu6050.o"
 "puzhong_watch\stm32f1xx_hal_gpio_ex.o"
 "puzhong_watch\stm32f1xx_hal_i2c.o"
 "puzhong_watch\stm32f1xx_hal.o"
