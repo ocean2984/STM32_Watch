@@ -124,7 +124,14 @@ int main(void)
 
     temp = DS18B20_GetTemp();
 		OLED_ShowString(0,0,"Temp:");
-    OLED_ShowNum(48,0,(int)temp,2);
+		
+     int a = (int)temp;
+    int b = (int)((temp - a) * 10);
+
+    OLED_ShowNum(48,0,a,2);
+    OLED_ShowChar(60,0,'.');
+    OLED_ShowNum(66,0,b,1);
+
     HAL_Delay(1000);
 		
     /* USER CODE END WHILE */

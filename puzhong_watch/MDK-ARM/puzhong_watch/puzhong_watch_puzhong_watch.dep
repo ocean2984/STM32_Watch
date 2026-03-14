@@ -1,6 +1,6 @@
 Dependencies for Project 'puzhong_watch', Target 'puzhong_watch': (DO NOT MODIFY !)
 F (startup_stm32f103xb.s)(0x69B39A17)(--cpu Cortex-M3 -g --apcs=interwork -I.\RTE\_puzhong_watch-IE:\keil5\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\keil5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include--pd "__UVISION_VERSION SETA 526" --pd "_RTE_ SETA 1" --pd "STM32F10X_MD SETA 1"--list startup_stm32f103xb.lst --xref -o puzhong_watch\startup_stm32f103xb.o --depend puzhong_watch\startup_stm32f103xb.d)
-F (..\Core\Src\ds18b20.c)(0x69B438E6)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_puzhong_watch-IE:\keil5\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\keil5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o puzhong_watch\ds18b20.o --omf_browse puzhong_watch\ds18b20.crf --depend puzhong_watch\ds18b20.d)
+F (..\Core\Src\ds18b20.c)(0x69B52D43)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_puzhong_watch-IE:\keil5\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\keil5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o puzhong_watch\ds18b20.o --omf_browse puzhong_watch\ds18b20.crf --depend puzhong_watch\ds18b20.d)
 I (../Core/Inc/ds18b20.h)(0x69B43328)
 I (../Core/Inc/main.h)(0x69B2CE62)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x699C36CD)
@@ -28,7 +28,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash.h)(0x699C36CD)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h)(0x699C36CD)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h)(0x699C36CD)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x699C36CD)
-F (..\Core\Src\oled.c)(0x69B42A89)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_puzhong_watch-IE:\keil5\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\keil5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o puzhong_watch\oled.o --omf_browse puzhong_watch\oled.crf --depend puzhong_watch\oled.d)
+F (..\Core\Src\oled.c)(0x69B52CB0)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_puzhong_watch-IE:\keil5\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\keil5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o puzhong_watch\oled.o --omf_browse puzhong_watch\oled.crf --depend puzhong_watch\oled.d)
 I (../Core/Inc/oled.h)(0x69B42A61)
 I (../Core/Inc/main.h)(0x69B2CE62)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x699C36CD)
@@ -61,7 +61,7 @@ I (../Core/Inc/oledfont.h)(0x69B4302F)
 F (..\Core\Inc\ds18b20.h)(0x69B43328)()
 F (..\Core\Inc\oled.h)(0x69B42A61)()
 F (..\Core\Inc\oledfont.h)(0x69B4302F)()
-F (../Core/Src/main.c)(0x69B43033)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_puzhong_watch-IE:\keil5\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\keil5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o puzhong_watch\main.o --omf_browse puzhong_watch\main.crf --depend puzhong_watch\main.d)
+F (../Core/Src/main.c)(0x69B527BF)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_puzhong_watch-IE:\keil5\ARM\PACK\ARM\CMSIS\5.4.0\CMSIS\Core\Include-IE:\keil5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o puzhong_watch\main.o --omf_browse puzhong_watch\main.crf --depend puzhong_watch\main.d)
 I (../Core/Inc/main.h)(0x69B2CE62)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x699C36CD)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x69B39A13)

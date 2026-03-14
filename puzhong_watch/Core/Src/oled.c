@@ -125,7 +125,7 @@ void OLED_ShowNum(uint8_t x,uint8_t y,uint32_t num,uint8_t len)
 
     for(uint8_t i=0;i<len;i++)
     {
-        temp = (num / 1);
+        temp = num % 10;
 
         OLED_ShowChar(x+6*(len-i-1),y,temp+'0');
 

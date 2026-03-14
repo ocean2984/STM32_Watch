@@ -24,21 +24,7 @@ static void DS18B20_IN(void)
     HAL_GPIO_Init(DS18B20_PORT, &GPIO_InitStruct);
 }
 
-/* 复位 */
-
-static void DS18B20_Reset(void)
-{
-    DS18B20_OUT();
-
-    HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_RESET);
-    HAL_Delay(1);
-
-    HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_SET);
-    HAL_Delay(1);
-}
-
-/* 初始化 */
-// 微秒延时（HAL库没有，我给你最简可用版）
+// 微秒延时
 void HAL_Delay_us(uint32_t us)
 {
     uint32_t delay = us * (SystemCoreClock / 1000000 / 4);
@@ -96,11 +82,13 @@ uint8_t DS18B20_ReadByte(void)
         HAL_Delay_us(2);
 
         DS18B20_IN();
-        dat >>= 1;
-        if(HAL_GPIO_ReadPin(DS18B20_PORT, DS18B20_PIN))
-            dat |= 0x80;
+         if(HAL_GPIO_ReadPin(DS18B20_PORT, DS18B20_PIN) == GPIO_PIN_SET)
+        {
+            dat |= (1 << i);
+        }
 
         HAL_Delay_us(60);
+        HAL_GPIO_WritePin(DS18B20_PORT, DS18B20_PIN, GPIO_PIN_SET);
     }
     return dat;
 }
@@ -114,7 +102,7 @@ float DS18B20_GetTemp(void)
     DS18B20_Init();
     DS18B20_WriteByte(0xCC);
     DS18B20_WriteByte(0x44);  // 开始转换
-
+	
     DS18B20_Init();
     DS18B20_WriteByte(0xCC);
     DS18B20_WriteByte(0xBE);  // 读数据
