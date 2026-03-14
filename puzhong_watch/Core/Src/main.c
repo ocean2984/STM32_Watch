@@ -19,12 +19,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "rtc.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ds18b20.h"
 #include "oled.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,6 +47,12 @@
 
 /* USER CODE BEGIN PV */
 float temp;
+
+RTC_TimeTypeDef getTime;
+RTC_DateTypeDef getDate;
+
+char timebuf[20];
+char datebuf[20];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,19 +102,35 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 	OLED_Init();
 	DS18B20_Init();
 	
 	OLED_Clear();
-    
+	
+	//====设置时间====
+    RTC_TimeTypeDef sTime;
+		RTC_DateTypeDef sDate;
+
+		sTime.Hours = 0;
+		sTime.Minutes = 10;
+		sTime.Seconds = 30;
+
+		HAL_RTC_SetTime(&hrtc,&sTime,RTC_FORMAT_BIN);
+
+		sDate.Year = 25;
+		sDate.Month = RTC_MONTH_MARCH;
+		sDate.Date = 15;
+
+		HAL_RTC_SetDate(&hrtc,&sDate,RTC_FORMAT_BIN);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		
+		//====key-led=====
 		 key_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
 
     if(key_state == GPIO_PIN_RESET)
@@ -122,15 +146,36 @@ int main(void)
         }
     }
 
+		//====时间===
+		HAL_RTC_GetTime(&hrtc,&getTime,RTC_FORMAT_BIN);
+		HAL_RTC_GetDate(&hrtc,&getDate,RTC_FORMAT_BIN);
+
+		sprintf(timebuf,"%02d:%02d:%02d",
+        getTime.Hours,
+        getTime.Minutes,
+        getTime.Seconds);
+		
+		OLED_ShowString(0,0,"Time:");
+		OLED_ShowString(36,0,timebuf);
+
+		sprintf(datebuf,"%04d-%02d-%02d",
+        2001 + getDate.Year,
+        getDate.Month,
+        getDate.Date);
+
+		OLED_ShowString(0,1,"Date:");
+		OLED_ShowString(36,1,datebuf);
+		
+		//====温度====
     temp = DS18B20_GetTemp();
-		OLED_ShowString(0,0,"Temp:");
+		OLED_ShowString(0,2,"Temp:");
 		
      int a = (int)temp;
     int b = (int)((temp - a) * 10);
 
-    OLED_ShowNum(48,0,a,2);
-    OLED_ShowChar(60,0,'.');
-    OLED_ShowNum(66,0,b,1);
+    OLED_ShowNum(48,2,a,2);
+    OLED_ShowChar(60,2,'.');
+    OLED_ShowNum(66,2,b,1);
 
     HAL_Delay(1000);
 		
@@ -149,14 +194,16 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -175,6 +222,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
