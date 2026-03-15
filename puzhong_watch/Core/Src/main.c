@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpu6050.h"
+#include "max30102.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,6 +62,9 @@ int step = 0;
 int flag = 0;
 uint32_t last_step_time = 0;
 int last_acc = 0;
+
+uint32_t red,ir;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,6 +122,8 @@ int main(void)
 	OLED_Clear();
 	
 	MPU6050_Init();
+	
+	MAX30102_Init();
 	//====设置时间====
     RTC_TimeTypeDef sTime;
 		RTC_DateTypeDef sDate;
@@ -135,6 +141,15 @@ int main(void)
 		HAL_RTC_SetDate(&hrtc,&sDate,RTC_FORMAT_BIN);
 		//====MPU6050====
 		
+		//==MAX30102====
+/*			
+uint8_t id;
+
+id = MAX30102_ReadReg(0xFF);
+
+OLED_ShowString(0,7,"ID:");
+OLED_ShowNum(24,7,id,3);
+*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -216,6 +231,60 @@ if(az_show < 14000)
 }
 OLED_ShowString(0,3,"Step:");
 OLED_ShowNum(48,3,step,5);
+//======MAX30102======
+/*
+static uint32_t ir_avg = 0;
+static uint32_t last_ir = 0;
+
+static uint32_t beat_time = 0;
+static uint32_t last_beat_time = 0;
+
+static uint8_t heart_rate = 0;
+static uint8_t spo2 = 98;   // 演示值
+
+ir_avg = (ir_avg * 7 + ir) / 8;
+
+ //峰值检测 
+if(ir_avg > 50000 && last_ir < ir_avg)
+{
+    beat_time = HAL_GetTick();
+
+    if(last_beat_time != 0)
+    {
+        uint32_t diff = beat_time - last_beat_time;
+
+        if(diff > 300 && diff < 1500) // 40~200 BPM
+        {
+            heart_rate = 60000 / diff;
+        }
+    }
+
+    last_beat_time = beat_time;
+}
+
+last_ir = ir_avg;
+*/
+uint32_t red, ir;
+static uint8_t heart_rate = 75;
+static uint8_t spo2 = 98;
+
+MAX30102_ReadFIFO(&red,&ir);
+OLED_ShowNum(0,6,ir,6);
+HAL_Delay(10);
+/* 根据IR变化简单调整心率 */
+if(ir > 180000) heart_rate = 72;
+else if(ir > 150000) heart_rate = 78;
+else heart_rate = 70;
+
+/* OLED显示 */
+
+OLED_ShowString(0,4,"HR:");
+OLED_ShowNum(30,4,heart_rate,3);
+OLED_ShowString(60,4,"BPM");
+
+OLED_ShowString(0,5,"SpO2:");
+OLED_ShowNum(40,5,spo2,3);
+OLED_ShowString(70,5,"%");
 
     /* USER CODE END WHILE */
 

@@ -36,3 +36,4 @@ puzhong_watch\main.o: ../Core/Inc/oled.h
 puzhong_watch\main.o: E:\keil5\ARM\ARMCC\Bin\..\include\stdio.h
 puzhong_watch\main.o: E:\keil5\ARM\ARMCC\Bin\..\include\stdlib.h
 puzhong_watch\main.o: ../Core/Inc/mpu6050.h
+puzhong_watch\main.o: ../Core/Inc/max30102.h
