@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define MAX30102_ADDRESS 0x57
+#define MAX30102_ADDRESS 0xAE
 
 void MAX30102_Init(void);
 void MAX30102_ReadFIFO(uint32_t *red_led, uint32_t *ir_led);

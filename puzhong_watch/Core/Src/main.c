@@ -56,15 +56,20 @@ RTC_DateTypeDef getDate;
 
 char timebuf[20];
 char datebuf[20];
-
+//MPU6050
 int16_t ax,ay,az;
 int step = 0;
 int flag = 0;
 uint32_t last_step_time = 0;
 int last_acc = 0;
+//MAX30102
+uint32_t red=0,ir=0;
 
-uint32_t red,ir;
-
+uint32_t tick_fast = 0;   // 用于传感器高频采样
+uint32_t tick_slow = 0;   // 用于显示和温度低频更新
+uint8_t  heart_rate = 0; // 心率初始值
+uint8_t  spo2 = 0;       // 血氧初始值
+uint32_t last_max30102_tick = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,6 +88,7 @@ GPIO_PinState key_state;  // 存储按键状态
    HAL_Delay(ms);
  }
 	 
+ void Calculate_HeartRate_SPO2(uint32_t red_val, uint32_t ir_val);
 /* USER CODE END 0 */
 
 /**
@@ -128,14 +134,14 @@ int main(void)
     RTC_TimeTypeDef sTime;
 		RTC_DateTypeDef sDate;
 
-		sTime.Hours = 0;
+		sTime.Hours = 21;
 		sTime.Minutes = 10;
 		sTime.Seconds = 30;
 
 		HAL_RTC_SetTime(&hrtc,&sTime,RTC_FORMAT_BIN);
 
-		sDate.Year = 25;
-		sDate.Month = RTC_MONTH_MARCH;
+		sDate.Year = 26;
+		sDate.Month = RTC_MONTH_APRIL;
 		sDate.Date = 15;
 
 		HAL_RTC_SetDate(&hrtc,&sDate,RTC_FORMAT_BIN);
@@ -150,142 +156,93 @@ id = MAX30102_ReadReg(0xFF);
 OLED_ShowString(0,7,"ID:");
 OLED_ShowNum(24,7,id,3);
 */
+
+  // 这里放一次性的显示提示
+  OLED_ShowString(0,0,"Initializing...");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+/* USER CODE BEGIN WHILE */
+
+
+    while (1)
   {
-		//====key-led=====
-		 key_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
-
-    if(key_state == GPIO_PIN_RESET)
-    {
+    // --- 1. 按键控制 ---
+    if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET) {
         HAL_Delay(10);
-
-        if(HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_15)==GPIO_PIN_RESET)
-        {
+        if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET) {
             led_flag = !led_flag;
-
-            HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,
-                led_flag?GPIO_PIN_RESET:GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, led_flag?GPIO_PIN_RESET:GPIO_PIN_SET);
+            while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET);
         }
     }
 
-		//====时间===
-		HAL_RTC_GetTime(&hrtc,&getTime,RTC_FORMAT_BIN);
-		HAL_RTC_GetDate(&hrtc,&getDate,RTC_FORMAT_BIN);
+    // --- 2. 时间、日期、温度 (每秒更新) ---
+    if (HAL_GetTick() - tick_slow >= 1000) {
+        tick_slow = HAL_GetTick();
+        
+        // 顺序：先读Time，后读Date
+        HAL_RTC_GetTime(&hrtc, &getTime, RTC_FORMAT_BIN);
+        HAL_RTC_GetDate(&hrtc, &getDate, RTC_FORMAT_BIN);
+        
+        // 显示时间
+        sprintf(timebuf, "Time: %02d:%02d:%02d   ", getTime.Hours, getTime.Minutes, getTime.Seconds);
+        OLED_ShowString(0, 0, timebuf);
 
-		sprintf(timebuf,"%02d:%02d:%02d",
-        getTime.Hours,
-        getTime.Minutes,
-        getTime.Seconds);
-		
-		OLED_ShowString(0,0,"Time:");
-		OLED_ShowString(36,0,timebuf);
+        // 显示日期 (2000 + Year)
+        sprintf(datebuf, "Date: 20%02d-%02d-%02d", getDate.Year, getDate.Month, getDate.Date);
+        OLED_ShowString(0, 1, datebuf);
 
-		sprintf(datebuf,"%04d-%02d-%02d",
-        2001 + getDate.Year,
-        getDate.Month,
-        getDate.Date);
-
-		OLED_ShowString(0,1,"Date:");
-		OLED_ShowString(36,1,datebuf);
-		
-		//====温度====
-    temp = DS18B20_GetTemp();
-		OLED_ShowString(0,2,"Temp:");
-		
-     int a = (int)temp;
-    int b = (int)((temp - a) * 10);
-
-    OLED_ShowNum(48,2,a,2);
-    OLED_ShowChar(60,2,'.');
-    OLED_ShowNum(66,2,b,1);
-
-    HAL_Delay(1000);
-		//=====MPU6050=====
-		MPU6050_ReadAccel(&ax,&ay,&az);
-MPU6050_ReadAccel(&ax,&ay,&az);
-
-int az_show = az;
-if(az_show < 0) az_show = -az_show;
-
-//检测波峰
-if(az_show > 16500 && flag == 0)
-{
-    //时间过滤（防止抖动）
-    if(HAL_GetTick() - last_step_time > 200)
-    {
-        step++;
-        last_step_time = HAL_GetTick();
+        // 显示温度
+        temp = DS18B20_GetTemp();
+        int a = (int)temp;
+        int b = (int)((temp - a) * 10);
+        OLED_ShowString(0, 2, "Temp: ");
+        OLED_ShowNum(48, 2, a, 2);
+        OLED_ShowChar(60, 2, '.');
+        OLED_ShowNum(66, 2, b, 1);
     }
 
-    flag = 1;
-}
+    // --- 3. 计步任务 (每100ms) ---
+    if (HAL_GetTick() - tick_fast >= 100) {
+        tick_fast = HAL_GetTick();
+        // 现测试心率血氧功能，不接MPU6050，下面这行注释掉
+        // MPU6050_ReadAccel(&ax, &ay, &az); 
+        OLED_ShowString(0, 3, "Step:");
+        OLED_ShowNum(48, 3, step, 5);
+    }
 
-//波谷复位
-if(az_show < 14000)
-{
-    flag = 0;
-}
-OLED_ShowString(0,3,"Step:");
-OLED_ShowNum(48,3,step,5);
-//======MAX30102======
-/*
-static uint32_t ir_avg = 0;
-static uint32_t last_ir = 0;
+    // --- 4. 心率血氧任务 (每40ms采样一次) ---
+    if (HAL_GetTick() - last_max30102_tick >= 40) {
+        last_max30102_tick = HAL_GetTick();
+        
+        MAX30102_ReadFIFO(&red, &ir);
+        
+        // 调试显示：显示ir值测试硬件是否正常检测工作
+				//OLED_ShowNum(0, 7, ir, 6); 
 
-static uint32_t beat_time = 0;
-static uint32_t last_beat_time = 0;
+        if (ir < 40000) { // 阈值设为 40000，没按手指时显示 ---
+            heart_rate = 0;
+            spo2 = 0;
+            OLED_ShowString(30, 4, "---  ");
+            OLED_ShowString(40, 5, "---  ");
+        } else {
+            // 有手指，调用算法计算心率血氧
+            Calculate_HeartRate_SPO2(red, ir);
+            
+            OLED_ShowString(0, 4, "HR: ");
+            if(heart_rate > 0) OLED_ShowNum(30, 4, heart_rate, 3);
+            else OLED_ShowString(30, 4, "CAL"); // 正在计算
+            OLED_ShowString(60, 4, "BPM");
 
-static uint8_t heart_rate = 0;
-static uint8_t spo2 = 98;   // 演示值
-
-ir_avg = (ir_avg * 7 + ir) / 8;
-
- //峰值检测 
-if(ir_avg > 50000 && last_ir < ir_avg)
-{
-    beat_time = HAL_GetTick();
-
-    if(last_beat_time != 0)
-    {
-        uint32_t diff = beat_time - last_beat_time;
-
-        if(diff > 300 && diff < 1500) // 40~200 BPM
-        {
-            heart_rate = 60000 / diff;
+            OLED_ShowString(0, 5, "SpO2:");
+            if(spo2 > 0) OLED_ShowNum(40, 5, spo2, 3);
+            else OLED_ShowString(40, 5, "CAL");
+            OLED_ShowString(70, 5, "%");
         }
     }
-
-    last_beat_time = beat_time;
-}
-
-last_ir = ir_avg;
-*/
-uint32_t red, ir;
-static uint8_t heart_rate = 75;
-static uint8_t spo2 = 98;
-
-MAX30102_ReadFIFO(&red,&ir);
-OLED_ShowNum(0,6,ir,6);
-HAL_Delay(10);
-/* 根据IR变化简单调整心率 */
-if(ir > 180000) heart_rate = 72;
-else if(ir > 150000) heart_rate = 78;
-else heart_rate = 70;
-
-/* OLED显示 */
-
-OLED_ShowString(0,4,"HR:");
-OLED_ShowNum(30,4,heart_rate,3);
-OLED_ShowString(60,4,"BPM");
-
-OLED_ShowString(0,5,"SpO2:");
-OLED_ShowNum(40,5,spo2,3);
-OLED_ShowString(70,5,"%");
-
+  
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -341,6 +298,34 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+//计算心率血氧
+void Calculate_HeartRate_SPO2(uint32_t red_val, uint32_t ir_val)
+{
+    static uint32_t last_beat_time = 0;
+    static float ir_avg = 0;
+    
+    if(ir_avg < 1.0) ir_avg = ir_val;
+    ir_avg = ir_avg * 0.98 + (float)ir_val * 0.02; // 平滑滤波
+    
+    // 阈值设为 1.005 (即超过平均值 0.5% 就认为是一次心跳)
+    if (ir_val > (uint32_t)(ir_avg * 1.005) && (HAL_GetTick() - last_beat_time > 450)) 
+    {
+        uint32_t interval = HAL_GetTick() - last_beat_time;
+        if (interval < 1500) {
+            heart_rate = 60000 / interval;
+        }
+        last_beat_time = HAL_GetTick();
+    }
+    
+    // 血氧计算
+    float ratio = (float)red_val / (float)ir_val;
+    if (ratio > 0.5 && ratio < 1.2) {
+        spo2 = (uint8_t)(110 - 15 * ratio);
+        if (spo2 > 100) spo2 = 100;
+    } else {
+        spo2 = 98; // 默认值
+    }
+}
 
 /* USER CODE END 4 */
 
