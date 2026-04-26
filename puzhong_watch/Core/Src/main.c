@@ -18,8 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "i2c.h"
 #include "rtc.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -30,6 +32,8 @@
 #include <stdlib.h>
 #include "mpu6050.h"
 #include "max30102.h"
+#include "esp8266.h"
+#include "wifi.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,6 +74,11 @@ uint32_t tick_slow = 0;   // 用于显示和温度低频更新
 uint8_t  heart_rate = 0; // 心率初始值
 uint8_t  spo2 = 0;       // 血氧初始值
 uint32_t last_max30102_tick = 0;
+
+//wifi
+uint32_t tick_wifi = 0;      // 云端上传计时
+uint8_t current_page = 0; // 0:时间, 1:健康, 2:计步
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -120,9 +129,18 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
+  MX_DMA_Init();
   MX_RTC_Init();
+  MX_USART3_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 	OLED_Init();
+  // 这里放一次性的显示提示
+  OLED_ShowString(0,0,"Initializing...");
+	
+	ESP_Init();
+	HAL_Delay(3000); //等 3 秒让 WiFi 模块启动完成并喷完乱码
+
 	DS18B20_Init();
 	
 	OLED_Clear();
@@ -130,35 +148,15 @@ int main(void)
 	MPU6050_Init();
 	
 	MAX30102_Init();
-	//====设置时间====
-    RTC_TimeTypeDef sTime;
-		RTC_DateTypeDef sDate;
-
-		sTime.Hours = 21;
-		sTime.Minutes = 10;
-		sTime.Seconds = 30;
-
-		HAL_RTC_SetTime(&hrtc,&sTime,RTC_FORMAT_BIN);
-
-		sDate.Year = 26;
-		sDate.Month = RTC_MONTH_APRIL;
-		sDate.Date = 15;
-
-		HAL_RTC_SetDate(&hrtc,&sDate,RTC_FORMAT_BIN);
+	
+		// 开机自动执行一次联网对时
+if(WiFi_Connect()) {
+    Sync_Time_From_NowAPI();
+}
 		//====MPU6050====
 		
 		//==MAX30102====
-/*			
-uint8_t id;
-
-id = MAX30102_ReadReg(0xFF);
-
-OLED_ShowString(0,7,"ID:");
-OLED_ShowNum(24,7,id,3);
-*/
-
-  // 这里放一次性的显示提示
-  OLED_ShowString(0,0,"Initializing...");
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -168,81 +166,114 @@ OLED_ShowNum(24,7,id,3);
 
     while (1)
   {
-    // --- 1. 按键控制 ---
-    if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET) {
-        HAL_Delay(10);
+		 uint8_t dat;
+
+    //电脑(USART1) -> WiFi(USART3)  检查电脑有没有发指令过来
+    if (HAL_UART_Receive(&huart1, &dat, 1, 0) == HAL_OK) 
+    {
+        HAL_UART_Transmit(&huart3, &dat, 1, 10);
+    }
+	 
+    // --- 1. 按键扫描与逻辑处理 (每 50ms 检测一次，保证灵敏度) ---
+    if (HAL_GetTick() - tick_fast >= 50) {
+        tick_fast = HAL_GetTick();
+
+        // KEY2 (PA14) -> 右滑 (切换页面)
+        if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_14) == GPIO_PIN_RESET) {
+            HAL_Delay(20); // 消抖
+            if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_14) == GPIO_PIN_RESET) {
+                current_page = (current_page + 1) % 3; // 在3个页面间循环
+                OLED_Clear(); 
+                while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_14) == GPIO_PIN_RESET); // 等待松开
+            }
+        }
+
+        // KEY1 (PA15) -> 控制 LED1
         if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET) {
-            led_flag = !led_flag;
-            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, led_flag?GPIO_PIN_RESET:GPIO_PIN_SET);
-            while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET);
+            HAL_Delay(20);
+            if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET) {
+                led_flag = !led_flag;
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, led_flag ? GPIO_PIN_RESET : GPIO_PIN_SET);
+                while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET);
+            }
+        }
+        
+        // KEY4 (PA12) -> 返回第一页
+        if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12) == GPIO_PIN_RESET) {
+            current_page = 0;
+            OLED_Clear();
         }
     }
 
-    // --- 2. 时间、日期、温度 (每秒更新) ---
-    if (HAL_GetTick() - tick_slow >= 1000) {
-        tick_slow = HAL_GetTick();
-        
-        // 顺序：先读Time，后读Date
-        HAL_RTC_GetTime(&hrtc, &getTime, RTC_FORMAT_BIN);
-        HAL_RTC_GetDate(&hrtc, &getDate, RTC_FORMAT_BIN);
-        
-        // 显示时间
-        sprintf(timebuf, "Time: %02d:%02d:%02d   ", getTime.Hours, getTime.Minutes, getTime.Seconds);
-        OLED_ShowString(0, 0, timebuf);
-
-        // 显示日期 (2000 + Year)
-        sprintf(datebuf, "Date: 20%02d-%02d-%02d", getDate.Year, getDate.Month, getDate.Date);
-        OLED_ShowString(0, 1, datebuf);
-
-        // 显示温度
-        temp = DS18B20_GetTemp();
-        int a = (int)temp;
-        int b = (int)((temp - a) * 10);
-        OLED_ShowString(0, 2, "Temp: ");
-        OLED_ShowNum(48, 2, a, 2);
-        OLED_ShowChar(60, 2, '.');
-        OLED_ShowNum(66, 2, b, 1);
-    }
-
-    // --- 3. 计步任务 (每100ms) ---
-    if (HAL_GetTick() - tick_fast >= 100) {
-        tick_fast = HAL_GetTick();
-        // 现测试心率血氧功能，不接MPU6050，下面这行注释掉
-        // MPU6050_ReadAccel(&ax, &ay, &az); 
-        OLED_ShowString(0, 3, "Step:");
-        OLED_ShowNum(48, 3, step, 5);
-    }
-
-    // --- 4. 心率血氧任务 (每40ms采样一次) ---
+    // --- 2. 传感器采样任务 (心率血氧/计步，高频) ---
     if (HAL_GetTick() - last_max30102_tick >= 40) {
         last_max30102_tick = HAL_GetTick();
         
+        // (A) 心率血氧采集
         MAX30102_ReadFIFO(&red, &ir);
-        
-        // 调试显示：显示ir值测试硬件是否正常检测工作
-				//OLED_ShowNum(0, 7, ir, 6); 
-
-        if (ir < 40000) { // 阈值设为 40000，没按手指时显示 ---
-            heart_rate = 0;
-            spo2 = 0;
-            OLED_ShowString(30, 4, "---  ");
-            OLED_ShowString(40, 5, "---  ");
-        } else {
-            // 有手指，调用算法计算心率血氧
+        if (ir > 40000) {
             Calculate_HeartRate_SPO2(red, ir);
-            
-            OLED_ShowString(0, 4, "HR: ");
-            if(heart_rate > 0) OLED_ShowNum(30, 4, heart_rate, 3);
-            else OLED_ShowString(30, 4, "CAL"); // 正在计算
-            OLED_ShowString(60, 4, "BPM");
+        } else {
+            heart_rate = 0; spo2 = 0;
+        }
 
-            OLED_ShowString(0, 5, "SpO2:");
-            if(spo2 > 0) OLED_ShowNum(40, 5, spo2, 3);
-            else OLED_ShowString(40, 5, "CAL");
-            OLED_ShowString(70, 5, "%");
+        // (B) 计步采集 
+        // MPU6050_ReadAccel(&ax, &ay, &az); 
+        // 简易计步算法逻辑放这里...
+    }
+
+    // --- 3. UI 刷新与慢速传感器 (时间/温度，每500ms刷新一次) ---
+    if (HAL_GetTick() - tick_slow >= 500) {
+        tick_slow = HAL_GetTick();
+        
+        // 更新公共数据：时间和温度
+        HAL_RTC_GetTime(&hrtc, &getTime, RTC_FORMAT_BIN);
+        HAL_RTC_GetDate(&hrtc, &getDate, RTC_FORMAT_BIN);
+        temp = DS18B20_GetTemp();
+
+        // 根据当前页面显示不同内容
+        if (current_page == 0) { // 页面0：时间与温度
+            sprintf(timebuf, "Time: %02d:%02d:%02d", getTime.Hours, getTime.Minutes, getTime.Seconds);
+            OLED_ShowString(0, 0, timebuf);
+            sprintf(datebuf, "Date: 20%02d-%02d-%02d", getDate.Year, getDate.Month, getDate.Date);
+            OLED_ShowString(0, 2, datebuf);
+            
+            int a = (int)temp;
+            int b = (int)((temp - a) * 10);
+						char temp_str[20];
+						sprintf(temp_str, "Temp: %2d.%1d C   ", a, b); 
+						OLED_ShowString(0, 4, temp_str);
+            //OLED_ShowString(0, 4, "Temp: ");
+            //OLED_ShowNum(48, 4, a, 2); OLED_ShowChar(60, 4, '.'); OLED_ShowNum(66, 4, b, 1);
+        } 
+        else if (current_page == 1) { // 页面1：心率与血氧
+            OLED_ShowString(0, 0, "--- Health ---");
+            OLED_ShowString(0, 2, "HR: ");
+            if(heart_rate > 0) OLED_ShowNum(40, 2, heart_rate, 3);
+            else OLED_ShowString(40, 2, "Wait");
+            OLED_ShowString(75, 2, "BPM");
+
+            OLED_ShowString(0, 4, "SpO2:");
+            if(spo2 > 0) OLED_ShowNum(40, 4, spo2, 3);
+            else OLED_ShowString(40, 4, "Wait");
+            OLED_ShowString(75, 4, "%");
+        }
+        else if (current_page == 2) { // 页面2：计步与状态
+            OLED_ShowString(0, 0, "--- Sport ---");
+            OLED_ShowString(0, 2, "Steps:");
+            OLED_ShowNum(50, 2, step, 5);
+            OLED_ShowString(0, 4, "WiFi: Connected");
         }
     }
-  
+
+    // --- 4. WiFi 云端上传任务 (每 20 秒上报一次数据) ---
+    if (HAL_GetTick() - tick_wifi >= 20000) {
+        tick_wifi = HAL_GetTick();
+        
+        // 调用封装在 wifi_app.c 里的函数上传数据
+        // ThingsCloud_Upload(heart_rate, spo2, temp, step);
+    }
+ 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

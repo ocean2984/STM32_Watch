@@ -28,8 +28,11 @@ puzhong_watch\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h
 puzhong_watch\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 puzhong_watch\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc.h
 puzhong_watch\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc_ex.h
+puzhong_watch\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+puzhong_watch\main.o: ../Core/Inc/dma.h
 puzhong_watch\main.o: ../Core/Inc/i2c.h
 puzhong_watch\main.o: ../Core/Inc/rtc.h
+puzhong_watch\main.o: ../Core/Inc/usart.h
 puzhong_watch\main.o: ../Core/Inc/gpio.h
 puzhong_watch\main.o: ../Core/Inc/ds18b20.h
 puzhong_watch\main.o: ../Core/Inc/oled.h
@@ -37,3 +40,6 @@ puzhong_watch\main.o: E:\keil5\ARM\ARMCC\Bin\..\include\stdio.h
 puzhong_watch\main.o: E:\keil5\ARM\ARMCC\Bin\..\include\stdlib.h
 puzhong_watch\main.o: ../Core/Inc/mpu6050.h
 puzhong_watch\main.o: ../Core/Inc/max30102.h
+puzhong_watch\main.o: ../Core/Inc/esp8266.h
+puzhong_watch\main.o: ../Core/Inc/wifi.h
+puzhong_watch\main.o: E:\keil5\ARM\ARMCC\Bin\..\include\string.h
