@@ -150,9 +150,28 @@ int main(void)
 	MAX30102_Init();
 	
 		// 开机自动执行一次联网对时
+/*	if(WiFi_Connect()) {
+   Sync_Time_From_NowAPI();
+		ThingsCloud_Init();
+		//对时完成后，多等几秒再进 while 循环执行上报
+    HAL_Delay(2000); 
+	} 
+*/
+// 联网流程
+
 if(WiFi_Connect()) {
     Sync_Time_From_NowAPI();
+    HAL_Delay(1000);
+    if(ThingsCloud_Init()) {
+        // 只有连接成功才显示 OK
+    } else {
+        // 即使失败也打印到串口辅助调试
+        HAL_UART_Transmit(&huart1, (uint8_t*)"MQTT Init Failed\r\n", 18, 100);
+    }
+} else {
+    OLED_ShowString(0, 2, "WiFi Connect Fail");
 }
+OLED_Clear();
 		//====MPU6050====
 		
 		//==MAX30102====
@@ -166,6 +185,16 @@ if(WiFi_Connect()) {
 
     while (1)
   {
+		uint8_t temp;
+    // WiFi -> 电脑
+    if (HAL_UART_Receive(&huart3, &temp, 1, 0) == HAL_OK) {
+        HAL_UART_Transmit(&huart1, &temp, 1, 0);
+    }
+    // 电脑 -> WiFi
+    if (HAL_UART_Receive(&huart1, &temp, 1, 0) == HAL_OK) {
+        HAL_UART_Transmit(&huart3, &temp, 1, 0);
+    }
+		/*
 		 uint8_t dat;
 
     //电脑(USART1) -> WiFi(USART3)  检查电脑有没有发指令过来
@@ -173,7 +202,14 @@ if(WiFi_Connect()) {
     {
         HAL_UART_Transmit(&huart3, &dat, 1, 10);
     }
-	 
+
+		//WiFi(USART3) -> 电脑(USART1)  看看 WiFi 到底回了什么
+uint8_t wifi_dat;
+if (HAL_UART_Receive(&huart3, &wifi_dat, 1, 0) == HAL_OK) 
+{
+    HAL_UART_Transmit(&huart1, &wifi_dat, 1, 10);
+}
+*//*
     // --- 1. 按键扫描与逻辑处理 (每 50ms 检测一次，保证灵敏度) ---
     if (HAL_GetTick() - tick_fast >= 50) {
         tick_fast = HAL_GetTick();
@@ -267,13 +303,13 @@ if(WiFi_Connect()) {
     }
 
     // --- 4. WiFi 云端上传任务 (每 20 秒上报一次数据) ---
-    if (HAL_GetTick() - tick_wifi >= 20000) {
+    if (HAL_GetTick() - tick_wifi >= 30000) {
         tick_wifi = HAL_GetTick();
         
         // 调用封装在 wifi_app.c 里的函数上传数据
-        // ThingsCloud_Upload(heart_rate, spo2, temp, step);
+         ThingsCloud_Upload(heart_rate, spo2, temp, step);
     }
- 
+ */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

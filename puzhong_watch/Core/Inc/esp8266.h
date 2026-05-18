@@ -6,6 +6,7 @@
 uint8_t ESP_SendCmd(char *cmd, char *reply, uint16_t timeout);
 void ESP_Init(void);
 void ESP_ClearBuf(void);
+uint8_t ESP_WaitResponse(char *target, uint16_t timeout);
 
 extern char esp_buf[512]; // ½ÓÊÕ»º³åÇø
 #endif

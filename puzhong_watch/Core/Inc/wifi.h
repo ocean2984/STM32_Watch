@@ -11,5 +11,6 @@ uint8_t WiFi_Connect(void);
 void Sync_Time_From_NowAPI(void);
 void ThingsCloud_Upload(int hr, int spo2, float temp, int steps);
 void Refresh_OLED(uint8_t page);
+uint8_t ThingsCloud_Init(void);
 
 #endif
